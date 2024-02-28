@@ -34,6 +34,8 @@
             // serviceProcessInstaller1
             // 
             this.serviceProcessInstaller1.Account = System.ServiceProcess.ServiceAccount.LocalSystem;
+            this.serviceProcessInstaller1.Installers.AddRange(new System.Configuration.Install.Installer[] {
+            this.ShiftServer});
             this.serviceProcessInstaller1.Password = null;
             this.serviceProcessInstaller1.Username = null;
             // 
@@ -45,8 +47,7 @@
             // ProjectInstaller
             // 
             this.Installers.AddRange(new System.Configuration.Install.Installer[] {
-            this.serviceProcessInstaller1,
-            this.ShiftServer});
+            this.serviceProcessInstaller1});
 
         }
 
