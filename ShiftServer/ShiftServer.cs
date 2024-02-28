@@ -4,30 +4,55 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Net;
+using System.Text;
 using System.Threading;
 
 namespace ShiftServer
 {
     public class ShiftServer
     {
-        private IList<string>? _users = new List<string>(new []{"Soso","Titi","Ruben","Lovecraft"});
+        private IList<string>? _users = new List<string>();
         private IList<string>? _waitQueue = new List<string>();
-
-        public ShiftServer(int adminPassword)
-        {
-            AdminPassword = adminPassword;
-        }
-
         public int AdminPassword { get; } = 1234;
 
-       
+        private void ReadNames(string filePath)
+        {
+            using (var streamReader = new StreamReader(filePath, Encoding.UTF8))
+            {
+                var usersAsString = streamReader.ReadLine();
+                this._users = usersAsString?.Split(';').ToList() ?? throw new InvalidOperationException();
+                this._users.Remove("");
+                Console.WriteLine(string.Join(Environment.NewLine, this._users));
+            }
+        }
 
-       
+        private int ReadPin(string filePath)
+        {
+            int pingAsInteger;
+            try
+            {
+                using var streamReader = new BinaryReader(new FileStream(filePath, FileMode.Open));
+                pingAsInteger = streamReader.ReadInt32();
+                Console.WriteLine(pingAsInteger);
+            }
+            catch (FileNotFoundException)
+            {
+                return 1234;
+            }
+
+            return pingAsInteger;
+        }
+
+        private void WritePin(string filePath, int newPin)
+        {
+            using var streamReader = new BinaryWriter(new FileStream(filePath, FileMode.OpenOrCreate));
+            streamReader.Write(newPin);
+        }
 
 
         public void Init()
         {
-            
+            ReadNames($@"{Environment.GetEnvironmentVariable("userprofile")}\usuarios.txt");
 
             var ipEndPoint = new IPEndPoint(IPAddress.Any, 31416);
             using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
@@ -106,7 +131,7 @@ namespace ShiftServer
                     }
                     else if (message.StartsWith("admin"))
                     {
-                        int adminPassword = 1234;
+                        int adminPassword = ReadPin(@$"{Environment.GetEnvironmentVariable("userprofile")}\pin.bin");
 
                         if (!int.TryParse(message.Trim().Replace("admin ", ""), out var guessAdminPassword))
                         {
@@ -146,6 +171,8 @@ namespace ShiftServer
                                     }
                                     else
                                     {
+                                        WritePin(@$"{Environment.GetEnvironmentVariable("userprofile")}\pin.bin",
+                                            newAdminPassword);
                                         streamWriter.WriteLine(@$"The password has been changed");
                                         streamWriter.Flush();
                                     }
