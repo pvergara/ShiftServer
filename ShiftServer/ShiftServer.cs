@@ -52,9 +52,11 @@ namespace ShiftServer
 
         public void Init()
         {
-            ReadNames($@"{Environment.GetEnvironmentVariable("userprofile")}\usuarios.txt");
+            ReadNames($@"{Environment.GetEnvironmentVariable("programdata")}\usuarios.txt");
 
-            var ipEndPoint = new IPEndPoint(IPAddress.Any, 31416);
+            var puertoReader = new StreamReader($@"{ Environment.GetEnvironmentVariable("programdata")}\puerto.txt");
+            var port = int.Parse(puertoReader.ReadLine());
+            var ipEndPoint = new IPEndPoint(IPAddress.Any, port);
             using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
                 socket.Bind(ipEndPoint);
@@ -131,7 +133,7 @@ namespace ShiftServer
                     }
                     else if (message.StartsWith("admin"))
                     {
-                        int adminPassword = ReadPin(@$"{Environment.GetEnvironmentVariable("userprofile")}\pin.bin");
+                        int adminPassword = ReadPin(@$"{Environment.GetEnvironmentVariable("programdata")}\pin.bin");
 
                         if (!int.TryParse(message.Trim().Replace("admin ", ""), out var guessAdminPassword))
                         {
